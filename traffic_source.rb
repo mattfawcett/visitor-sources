@@ -11,34 +11,38 @@
 #    google              => source             Where the person came from. Could be keyword such as `google` or a domain name [not required]
 #    December%20Campaign => campaign           Usually set for ppc traffic in adwords [not required]
 #    /content            => content            when a referal, this is the path from which they came from [not required]
+
+require "uri"
 class TrafficSource
   attr_accessor :encoder_version, :unix_timestamp, :medium, :term, :source, :campaign, :content
-
+  COOKIE_LINE_PARAMETERS = ['encoder_version', 'unix_timestamp', 'medium', 'term', 'source', 'campaign', 'content']
   
   def self.updated_rack_environment(old_env)
     old_env
   end
   
   def TrafficSource.initialize_with_rack_env(env)
-    puts "ENV IS #{env.inspect}"
     traffic_source = self.new
+    if !env["HTTP_REFERER"].nil? && env["HTTP_REFERER"] =~ /#{env["HTTP_HOST"]}/
+      return traffic_source
+    end
     traffic_source.unix_timestamp = Time.now.to_i
     traffic_source.encoder_version = 1
     if env["HTTP_REFERER"].nil?
-      traffic_source.medium = "direct"
-      
+      traffic_source.medium = "direct"      
+    else
+      uri = URI.parse(env["HTTP_REFERER"])
+      traffic_source.medium = "referal"      
+      traffic_source.source = uri.host
+      traffic_source.content = uri.path
     end
     return traffic_source
   end
   
-  def to_string
-    string = "#{encoder_version}|#{unix_timestamp}" 
-    string << "|#{medium}"
-    string << "|#{term}" if term
-    string << "|#{source}" if source
-    string << "|#{campaign}" if campaign
-    string << "|#{content}" if content
-    return string
+  def to_s
+    return nil if medium.nil?
+    # join each element by pipes(|), remove any unnecessary  unused pipes from the end
+    COOKIE_LINE_PARAMETERS.collect{|param| self.send(param)}.join("|").gsub(/\|+$/, '')
   end
 
 
