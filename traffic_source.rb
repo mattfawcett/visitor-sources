@@ -15,4 +15,8 @@ class TrafficSource
   def initialize(rack_environment)
     
   end
+  
+  def self.updated_rack_environment(old_env)
+    old_env
+  end
 end

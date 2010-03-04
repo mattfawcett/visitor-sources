@@ -1,17 +1,13 @@
+use Rack::Session::Cookie
 class TrafficSourceMiddleware
   def initialize(app)
     @app = app
   end
     
   def call(env)
-    @start = Time.now
+    env = TrafficSource.updated_rack_environment(env)
     @status, @headers, @response = @app.call(env)
-    @stop = Time.now
-    [@status, @headers, self]
+    [@status, @headers, env.inspect+'<a href="/">home</a>']
   end
-  
-  def each(&block)
-    block.call("<!-- #{@message}: #{@stop - @start} -->\n") if @headers["Content-Type"].include? "text/html"
-    @response.each(&block)
-  end
+
 end
