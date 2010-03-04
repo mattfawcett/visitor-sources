@@ -12,11 +12,34 @@
 #    December%20Campaign => campaign           Usually set for ppc traffic in adwords [not required]
 #    /content            => content            when a referal, this is the path from which they came from [not required]
 class TrafficSource
-  def initialize(rack_environment)
-    
-  end
+  attr_accessor :encoder_version, :unix_timestamp, :medium, :term, :source, :campaign, :content
+
   
   def self.updated_rack_environment(old_env)
     old_env
   end
+  
+  def TrafficSource.initialize_with_rack_env(env)
+    puts "ENV IS #{env.inspect}"
+    traffic_source = self.new
+    traffic_source.unix_timestamp = Time.now.to_i
+    traffic_source.encoder_version = 1
+    if env["HTTP_REFERER"].nil?
+      traffic_source.medium = "direct"
+      
+    end
+    return traffic_source
+  end
+  
+  def to_string
+    string = "#{encoder_version}|#{unix_timestamp}" 
+    string << "|#{medium}"
+    string << "|#{term}" if term
+    string << "|#{source}" if source
+    string << "|#{campaign}" if campaign
+    string << "|#{content}" if content
+    return string
+  end
+
+
 end

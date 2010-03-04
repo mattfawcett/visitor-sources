@@ -2,25 +2,31 @@ require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
 
                     
-class TrafficSourceMiddlewareTest < Test::Unit::TestCase
-  include Rack::Test::Methods
-
-  def app
-    Sinatra::Application    
+class TrafficSourceTest < Test::Unit::TestCase
+ 
+  context "initialize_with_rack_env" do   
+    context "when there is no referer" do
+      should "add create a TrafficSource instance with medium of direct" do
+        rack_env = EXAMPLE_RACK_ENV
+        rack_env["HTTP_REFERER"] = nil
+        traffic_source = TrafficSource.initialize_with_rack_env(rack_env)
+        assert_equal "direct", traffic_source.medium
+        assert_equal Time.now.to_i, traffic_source.unix_timestamp
+        assert_equal "1|#{Time.now.to_i}|direct", traffic_source.to_string
+      end
+    end
+    
+    context "when there is a referer" do
+      context "when the referer is an interal address" do
+        
+      end
+      
+      context "when the refere is external" do
+        
+      end
+    end
+    
   end
 
-  def updated_rack_environment    
-    get "/", params = {}, rack_env = {}
-    assert last_response.ok?
-    cookie_value = last_response.headers["Set-Cookie"][/rack.session=(.*);/, 1]
-    puts "COOKIE VAL IS #{cookie_value}"
-    decoded_cookie_value = Base64.decode64(cookie_value)
-    puts "decoded val is #{decoded_cookie_value}"
-    assert_equal "1|#{Time.now.to_i}|direct", decoded_cookie_value
-    #puts "APP IS "+app.sessions.inspect
-    #assert_equal last_response.headers["Set-Cookie"], ""
-    #Base64.decode64(enc)
-
-  end
 
 end                    
