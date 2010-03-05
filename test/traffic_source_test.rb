@@ -11,7 +11,7 @@ class TrafficSourceTest < Test::Unit::TestCase
       @rack_env = EXAMPLE_RACK_ENV
       @custom_variable_matches = {:campaign => :custom_campaign, :term => :custom_keywords, :medium => :custom_medium}        
     end
-    context "initialize_with_@rack_env" do     
+    context "initialize_with_rack_env" do     
          
       context "when there are custom variables in the url present" do
         should "use the custom variables to set the correct TrafficSource" do
@@ -25,11 +25,11 @@ class TrafficSourceTest < Test::Unit::TestCase
           assert_equal "1|#{Time.now.to_i}|cpc|Product One|google|MyCamp1", traffic_source.to_s
         end
       
-        should "use presume direct if no gclid" do          
+        should "use presume organic if no gclid and from a search engine" do          
           @rack_env["rack.request.query_hash"] = {:custom_campaign => "MyCamp1", :custom_keywords => "Product One"}
           @rack_env["HTTP_REFERER"] = "http://www.google.co.uk/search"
           traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
-          assert_equal "direct", traffic_source.medium
+          assert_equal "organic", traffic_source.medium
           assert_equal "MyCamp1", traffic_source.campaign
           assert_equal "Product One", traffic_source.term
           assert_equal Time.now.to_i, traffic_source.unix_timestamp
