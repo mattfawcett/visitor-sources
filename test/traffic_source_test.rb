@@ -134,7 +134,39 @@ class TrafficSourceTest < Test::Unit::TestCase
       end
       
     end
+    
+    context "updated_rack_environment" do
+
+      should "not update the enviroment if the current TrafficSource#to_s is nil" do
+        @rack_env["HTTP_REFERER"] = "http://localhost:9393/some/path"
+        rack_env = TrafficSource.updated_rack_environment(@rack_env)
+        assert_equal "", rack_env["rack.session"][:traffic_sources]
+      end
+
+      should "not update the enviroment if the last TrafficSource#to_s is the same as the current traffic source" do
+        @rack_env["HTTP_REFERER"] = nil
+        rack_env = TrafficSource.updated_rack_environment(@rack_env)
+        assert_equal "1|#{Time.now.to_i}|direct", rack_env["rack.session"][:traffic_sources]
+
+        rack_env = TrafficSource.updated_rack_environment(@rack_env)
+        assert_equal "1|#{Time.now.to_i}|direct", rack_env["rack.session"][:traffic_sources]
+      end
+
+      should "update the traffic source if the current one is differenty from the last one" do
+        @rack_env["HTTP_REFERER"] = nil
+        rack_env = TrafficSource.updated_rack_environment(@rack_env)
+        assert_equal "1|#{Time.now.to_i}|direct", rack_env["rack.session"][:traffic_sources]
+
+        rack_env["rack.request.query_hash"] = {:utm_campaign => "MyCamp1", :utm_term => "Product One", :utm_medium => "cpc", :utm_source => "google", :utm_term => "Product One"}
+        rack_env["HTTP_REFERER"] = "http://www.google.co.uk/search"
+        rack_env = TrafficSource.updated_rack_environment(@rack_env)
+        assert_equal "1|#{Time.now.to_i}|direct,1|#{Time.now.to_i}|cpc|Product One|google|MyCamp1", rack_env["rack.session"][:traffic_sources]      
+      end
+    end
+    
   end
+  
+  
   
   context "same_as?" do
     setup do
@@ -155,5 +187,21 @@ class TrafficSourceTest < Test::Unit::TestCase
       assert !@source_1.same_as?(@source_2)
     end
   end
+  
+  context "initialize_from_string" do
+    should "create a new TrafficSource using the correct parameters from the string" do
+      string = "1|123456|organic|mysearchterms|google"
+      source = TrafficSource.initialize_from_string(string)
+      assert_equal 1,               source.encoder_version
+      assert_equal 123456,          source.unix_timestamp
+      assert_equal "organic",       source.medium
+      assert_equal "mysearchterms", source.term
+      assert_equal "google",        source.source
+      assert_nil    source.campaign
+      assert_nil    source.content
+    end
+  end
+  
+  
   
 end                    

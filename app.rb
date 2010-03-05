@@ -9,8 +9,8 @@ use TrafficSourceMiddleware
 
 
 get "/" do
-  session[:traffic_sources] ||= 's'
-  # session[:traffic_sources] << TrafficSource.new(env).to_s# unless session[:traffic_sources].spl
+  #session[:traffic_sources] ||= 's'
+  # tsession[:traffic_sources] << TrafficSource.new(env).to_s# unless session[:traffic_sources].spl
   session[:traffic_sources].inspect
 end
 

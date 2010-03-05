@@ -26,7 +26,17 @@ class TrafficSource
   end
   
   def self.updated_rack_environment(old_env)
-    old_env
+    old_env["rack.session"][:traffic_sources] ||= ''
+    traffic_sources = old_env["rack.session"][:traffic_sources].split(",")
+    latest_source = TrafficSource.initialize_with_rack_env(old_env) #TODO parameter mapping
+    return old_env if latest_source.to_s.nil?
+    if traffic_sources.length > 0
+      last_source = TrafficSource.initialize_from_string(traffic_sources.last)
+      return old_env if last_source.same_as?(latest_source)
+    end
+    traffic_sources << latest_source
+    old_env["rack.session"][:traffic_sources] = traffic_sources.join(",")
+    return old_env
   end
   
   def TrafficSource.initialize_with_rack_env(env, custom_parameter_mapping = {})
@@ -59,6 +69,15 @@ class TrafficSource
         end
         traffic_source.content = uri.path if traffic_source.content.nil? && !search_engine
       rescue; end
+    end
+    return traffic_source
+  end
+  
+  def TrafficSource.initialize_from_string(string)
+    string_attributes = string.split("|")
+    traffic_source = TrafficSource.new(:encoder_version => string_attributes[0].to_i, :unix_timestamp => string_attributes[1].to_i)
+    COOKIE_LINE_PARAMETERS.last(5).each_with_index do |attribute, index|
+      traffic_source.send("#{attribute}=", string_attributes[index+2])
     end
     return traffic_source
   end

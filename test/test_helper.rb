@@ -6,7 +6,7 @@ require 'base64'
 require File.expand_path(File.dirname(__FILE__) + '/../app')
 
 EXAMPLE_RACK_ENV = {
-"rack.session"=>{:traffic_sources=>"ABC"}, 
+"rack.session"=>{:traffic_sources=>""}, 
 "HTTP_HOST"=>"localhost:9393", 
 "HTTP_ACCEPT"=>"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", 
 "SERVER_NAME"=>"localhost", 
