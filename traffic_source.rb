@@ -19,16 +19,19 @@ class TrafficSource
   COOKIE_LINE_PARAMETERS = ['encoder_version', 'unix_timestamp', 'medium', 'term', 'source', 'campaign', 'content']
   STANDARD_PARAMETER_MAPPING = {:medium => :utm_medium, :term => :utm_term, :source => :utm_source, :campaign => :utm_campaign, :content => :utm_content}
   
+  def initialize(attributes={})
+    attributes.each do |key, value|
+      self.send("#{key}=", value)
+    end
+  end
+  
   def self.updated_rack_environment(old_env)
     old_env
   end
   
   def TrafficSource.initialize_with_rack_env(env, custom_parameter_mapping = {})
-    traffic_source = self.new
-    traffic_source.env = env 
-    traffic_source.custom_parameter_mapping = custom_parameter_mapping
-    traffic_source.unix_timestamp = Time.now.to_i
-    traffic_source.encoder_version = 1
+    traffic_source = self.new(:env => env, :custom_parameter_mapping => custom_parameter_mapping, 
+                              :unix_timestamp => Time.now.to_i, :encoder_version => 1)
     
     COOKIE_LINE_PARAMETERS.last(5).each do |attribute| 
       traffic_source.send("#{attribute}=", traffic_source.query_string_value_for(attribute.to_sym))

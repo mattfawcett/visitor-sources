@@ -138,7 +138,7 @@ class TrafficSourceTest < Test::Unit::TestCase
   
   context "same_as?" do
     should "be true if all the main fields are the same" do
-
+      
     end
     
     should "be false if one of the fields are different" do
