@@ -15,7 +15,7 @@ class TrafficSourceTest < Test::Unit::TestCase
          
       context "when there are custom variables in the url present" do
         should "use the custom variables to set the correct TrafficSource" do
-          @rack_env["rack.request.query_hash"] = {:custom_campaign => "MyCamp1", :custom_keywords => "Product One", :gclid => "AutoAdwordsTaggingClid"}
+          @rack_env["rack.request.query_hash"] = {"custom_campaign" => "MyCamp1", "custom_keywords" => "Product One", "gclid" => "AutoAdwordsTaggingClid"}
           @rack_env["HTTP_REFERER"] = "http://www.google.co.uk/search"
           traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
           assert_equal "cpc", traffic_source.medium
@@ -26,7 +26,7 @@ class TrafficSourceTest < Test::Unit::TestCase
         end
       
         should "use presume organic if no gclid and from a search engine" do          
-          @rack_env["rack.request.query_hash"] = {:custom_campaign => "MyCamp1", :custom_keywords => "Product One"}
+          @rack_env["rack.request.query_hash"] = {"custom_campaign" => "MyCamp1", "custom_keywords" => "Product One"}
           @rack_env["HTTP_REFERER"] = "http://www.google.co.uk/search"
           traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
           assert_equal "organic", traffic_source.medium
@@ -37,7 +37,7 @@ class TrafficSourceTest < Test::Unit::TestCase
         end
       
         should "assign to cpc if a custom variable says thats the case" do
-          @rack_env["rack.request.query_hash"] = {:custom_campaign => "MyCamp1", :custom_keywords => "Product One", :custom_medium => "cpc"}
+          @rack_env["rack.request.query_hash"] = {"custom_campaign" => "MyCamp1", "custom_keywords" => "Product One", "custom_medium" => "cpc"}
           @rack_env["HTTP_REFERER"] = "http://www.google.co.uk/search"
           traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
           assert_equal "cpc", traffic_source.medium
@@ -94,7 +94,7 @@ class TrafficSourceTest < Test::Unit::TestCase
       
       context "using standard google variables" do
         should "should assign to ppc if the variables say so" do
-          @rack_env["rack.request.query_hash"] = {:utm_campaign => "MyCamp1", :utm_term => "Product One", :utm_medium => "cpc", :utm_source => "google", :utm_term => "Product One"}
+          @rack_env["rack.request.query_hash"] = {"utm_campaign" => "MyCamp1", "utm_term" => "Product One", "utm_medium" => "cpc", "utm_source" => "google", "utm_term" => "Product One"}
           @rack_env["HTTP_REFERER"] = "http://www.google.co.uk/search"
           traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
           assert_equal "cpc", traffic_source.medium
@@ -113,18 +113,18 @@ class TrafficSourceTest < Test::Unit::TestCase
       end
       
       should "use the custom value if there is a match" do    
-        @traffic_source.env = @rack_env.merge("rack.request.query_hash" => {:custom_campaign => "mattscustomcampaign", :utm_campaign => "standardcampaign"})          
+        @traffic_source.env = @rack_env.merge("rack.request.query_hash" => {"custom_campaign" => "mattscustomcampaign", "utm_campaign" => "standardcampaign"})          
         assert_equal "mattscustomcampaign", @traffic_source.query_string_value_for(:campaign)
       end
       
       should "use the standard value if there is a match and no custom match" do    
-        @traffic_source.env = @rack_env.merge("rack.request.query_hash" => {:utm_campaign => "standardcampaign"})          
+        @traffic_source.env = @rack_env.merge("rack.request.query_hash" => {"utm_campaign" => "standardcampaign"})          
         assert_equal "standardcampaign", @traffic_source.query_string_value_for(:campaign)
       end
       
       should "use the standard match if we don't even have any custom parameter mapping" do    
         @traffic_source.custom_parameter_mapping = {}        
-        @traffic_source.env = @rack_env.merge("rack.request.query_hash" => {:custom_campaign => "mattscustomcampaign", :utm_campaign => "standardcampaign"})          
+        @traffic_source.env = @rack_env.merge("rack.request.query_hash" => {"custom_campaign" => "mattscustomcampaign", "utm_campaign" => "standardcampaign"})          
         assert_equal "standardcampaign", @traffic_source.query_string_value_for(:campaign)
       end
       
@@ -157,7 +157,7 @@ class TrafficSourceTest < Test::Unit::TestCase
         rack_env = TrafficSource.updated_rack_environment(@rack_env)
         assert_equal "1|#{Time.now.to_i}|direct", rack_env["rack.session"][:traffic_sources]
 
-        rack_env["rack.request.query_hash"] = {:utm_campaign => "MyCamp1", :utm_term => "Product One", :utm_medium => "cpc", :utm_source => "google", :utm_term => "Product One"}
+        rack_env["rack.request.query_hash"] = {"utm_campaign" => "MyCamp1", "utm_term" => "Product One", "utm_medium" => "cpc", "utm_source" => "google", "utm_term" => "Product One"}
         rack_env["HTTP_REFERER"] = "http://www.google.co.uk/search"
         rack_env = TrafficSource.updated_rack_environment(@rack_env)
         assert_equal "1|#{Time.now.to_i}|direct,1|#{Time.now.to_i}|cpc|Product One|google|MyCamp1", rack_env["rack.session"][:traffic_sources]      

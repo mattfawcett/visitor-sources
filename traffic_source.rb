@@ -44,10 +44,10 @@ class TrafficSource
     
     COOKIE_LINE_PARAMETERS.last(5).each do |attribute| 
       traffic_source.send("#{attribute}=", traffic_source.query_string_value_for(attribute.to_sym))
-    end
+    end    
     
     #special case for adwords auto tagging
-    traffic_source.medium = 'cpc' if traffic_source.medium.nil? && !traffic_source.env["rack.request.query_hash"][:gclid].nil?
+    traffic_source.medium = 'cpc' if traffic_source.medium.nil? && !traffic_source.env["rack.request.query_hash"]["gclid"].nil?
     
     if traffic_source.medium.nil?          
       if env["HTTP_REFERER"].nil?
@@ -87,13 +87,12 @@ class TrafficSource
     COOKIE_LINE_PARAMETERS.collect{|param| self.send(param)}.join("|").gsub(/\|+$/, '')
   end
 
-  def query_string_value_for(attribute)
-    self.env["rack.request.query_hash"] ||= {}
-    if custom_parameter_mapping[attribute] && env["rack.request.query_hash"][custom_parameter_mapping[attribute]]
-      return env["rack.request.query_hash"][custom_parameter_mapping[attribute]]
-    end
-    if STANDARD_PARAMETER_MAPPING[attribute] && env["rack.request.query_hash"][STANDARD_PARAMETER_MAPPING[attribute]]
-      return env["rack.request.query_hash"][STANDARD_PARAMETER_MAPPING[attribute]]
+  def query_string_value_for(attribute)    
+    if custom_parameter_mapping[attribute] && !env["rack.request.query_hash"][custom_parameter_mapping[attribute].to_s].nil?
+      return env["rack.request.query_hash"][custom_parameter_mapping[attribute].to_s]      
+    end    
+    if env["rack.request.query_hash"][STANDARD_PARAMETER_MAPPING[attribute].to_s]
+      return env["rack.request.query_hash"][STANDARD_PARAMETER_MAPPING[attribute].to_s]
     end 
   end
   
