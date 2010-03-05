@@ -49,7 +49,7 @@ class TrafficSource
         search_engine = SearchEngine.find(traffic_source.source)
         if search_engine    
           traffic_source.source = search_engine.name
-          traffic_source.term = env["rack.request.query_hash"][search_engine.search_parameter] if traffic_source.term.nil?
+          traffic_source.term = Rack::Utils.parse_query(uri.query)[search_engine.search_parameter] if traffic_source.term.nil?
           traffic_source.medium = "organic" unless traffic_source.medium == 'cpc'
         end
         traffic_source.content = uri.path if traffic_source.content.nil? && !search_engine

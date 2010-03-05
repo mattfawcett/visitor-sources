@@ -79,6 +79,16 @@ class TrafficSourceTest < Test::Unit::TestCase
                 assert_equal "/some/path", traffic_source.content
                 assert_equal "1|#{Time.now.to_i}|referal||matthewfawcett.co.uk||/some/path", traffic_source.to_s
               end
+              
+              should "assign to a search engine with correct keywords if referer matches" do
+                @rack_env["HTTP_REFERER"] = "http://google.co.uk/search?q=mysearchterms"
+                traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
+                assert_equal "organic", traffic_source.medium
+                assert_equal "google", traffic_source.source
+                assert_equal "mysearchterms", traffic_source.term
+                assert_nil   traffic_source.content
+                assert_equal "1|#{Time.now.to_i}|organic|mysearchterms|google", traffic_source.to_s
+              end
             end
           end
         end
