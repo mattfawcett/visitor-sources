@@ -104,4 +104,8 @@ class TrafficSource
     end
     return true
   end
+  
+  def date
+    Time.at(unix_timestamp)
+  end
 end

@@ -9,9 +9,7 @@ use TrafficSourceMiddleware
 
 
 
-get "/" do
-  #session[:traffic_sources] ||= 's'
-  # tsession[:traffic_sources] << TrafficSource.new(env).to_s# unless session[:traffic_sources].spl
-  request.env[:traffic_sources].inspect  
+get "/" do 
+  request.env[:traffic_sources].to_s + '<a href="/"></a>'
 end
 

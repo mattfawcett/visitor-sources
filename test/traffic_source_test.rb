@@ -202,6 +202,13 @@ class TrafficSourceTest < Test::Unit::TestCase
     end
   end
   
+  context "date" do
+    should "return a date object using the timestamp" do
+      @source = TrafficSource.new(:unix_timestamp => 1267804832)
+      assert_equal Time.at(1267804832), @source.date
+    end
+  end
+  
   
   
 end                    
