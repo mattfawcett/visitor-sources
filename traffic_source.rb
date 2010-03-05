@@ -43,7 +43,6 @@ class TrafficSource
       end
     end    
     if traffic_source.source.nil?     
-      puts "TRAFFIC SOURCE IS NIL, referer is #{env["HTTP_REFERER"]}"
       begin 
         uri = URI.parse(env["HTTP_REFERER"])   
         traffic_source.source = uri.host
