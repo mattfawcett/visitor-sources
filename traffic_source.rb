@@ -6,7 +6,7 @@
 # Broken down, this is what the variables mean
 #    1                   => encoder_version    makes it easy to change how this works in the future without loosing old data already in peoples cookies
 #    1266945604          => unix_timestamp     at which the TrafficSource was generated
-#    ppc                 => medium             how the person cameto the site (will be wither ppc, direct, or referal)
+#    ppc                 => medium             how the person cameto the site (main ones are cpc, direct, organic or referal)
 #    just%20tv%20stands  => term               The search term that bought the user to the site [not required]
 #    google              => source             Where the person came from. Could be keyword such as `google` or a domain name [not required]
 #    December%20Campaign => campaign           Usually set for ppc traffic in adwords [not required]
@@ -14,27 +14,39 @@
 
 require "uri"
 class TrafficSource
-  attr_accessor :encoder_version, :unix_timestamp, :medium, :term, :source, :campaign, :content
+  attr_accessor :encoder_version, :unix_timestamp, :medium, :term, :source, :campaign, :content, :custom_parameter_mapping, :env
   COOKIE_LINE_PARAMETERS = ['encoder_version', 'unix_timestamp', 'medium', 'term', 'source', 'campaign', 'content']
+  STANDARD_PARAMETER_MAPPING = {:medium => :utm_medium, :term => :utm_term, :source => :utm_source, :campaign => :utm_campaign, :content => :utm_content}
   
   def self.updated_rack_environment(old_env)
     old_env
   end
   
-  def TrafficSource.initialize_with_rack_env(env)
+  def TrafficSource.initialize_with_rack_env(env, custom_parameter_mapping = {})
     traffic_source = self.new
-    if !env["HTTP_REFERER"].nil? && env["HTTP_REFERER"] =~ /#{env["HTTP_HOST"]}/
-      return traffic_source
-    end
+    traffic_source.env = env 
+    traffic_source.custom_parameter_mapping = custom_parameter_mapping
     traffic_source.unix_timestamp = Time.now.to_i
     traffic_source.encoder_version = 1
-    if env["HTTP_REFERER"].nil?
-      traffic_source.medium = "direct"      
-    else
-      uri = URI.parse(env["HTTP_REFERER"])
-      traffic_source.medium = "referal"      
-      traffic_source.source = uri.host
-      traffic_source.content = uri.path
+    
+    COOKIE_LINE_PARAMETERS.last(5).each do |attribute| 
+      traffic_source.send("#{attribute}=", traffic_source.query_string_value_for(attribute.to_sym))
+    end
+    #special case for adwords auto tagging
+    traffic_source.medium = 'cpc' if traffic_source.medium.nil? && !traffic_source.env["rack.request.query_hash"][:gclid].nil?
+    if traffic_source.medium.nil?
+      if !env["HTTP_REFERER"].nil? && env["HTTP_REFERER"] =~ /#{env["HTTP_HOST"]}/
+        return traffic_source
+      end
+    
+      if env["HTTP_REFERER"].nil?
+        traffic_source.medium = "direct"      
+      else
+        uri = URI.parse(env["HTTP_REFERER"])
+        traffic_source.medium = "referal"      
+        traffic_source.source = uri.host
+        traffic_source.content = uri.path
+      end
     end
     return traffic_source
   end
@@ -45,5 +57,12 @@ class TrafficSource
     COOKIE_LINE_PARAMETERS.collect{|param| self.send(param)}.join("|").gsub(/\|+$/, '')
   end
 
-
+  def query_string_value_for(attribute)
+    if custom_parameter_mapping[attribute] && env["rack.request.query_hash"][custom_parameter_mapping[attribute]]
+      return env["rack.request.query_hash"][custom_parameter_mapping[attribute]]
+    end
+    if STANDARD_PARAMETER_MAPPING[attribute] && env["rack.request.query_hash"][STANDARD_PARAMETER_MAPPING[attribute]]
+      return env["rack.request.query_hash"][STANDARD_PARAMETER_MAPPING[attribute]]
+    end 
+  end
 end
