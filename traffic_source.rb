@@ -25,17 +25,16 @@ class TrafficSource
     end
   end
   
-  def self.updated_rack_environment(old_env)
+  def self.updated_rack_environment(old_env, custom_parameter_mapping = {})
     old_env["rack.session"][:traffic_sources] ||= ''
-    traffic_sources = old_env["rack.session"][:traffic_sources].split(",")
-    latest_source = TrafficSource.initialize_with_rack_env(old_env) #TODO parameter mapping
+    traffic_sources = TrafficSources.new(old_env["rack.session"][:traffic_sources])
+    latest_source = TrafficSource.initialize_with_rack_env(old_env, custom_parameter_mapping)
     return old_env if latest_source.to_s.nil?
     if traffic_sources.length > 0
-      last_source = TrafficSource.initialize_from_string(traffic_sources.last)
-      return old_env if last_source.same_as?(latest_source)
+      return old_env if latest_source.same_as?(traffic_sources.last)
     end
     traffic_sources << latest_source
-    old_env["rack.session"][:traffic_sources] = traffic_sources.join(",")
+    old_env["rack.session"][:traffic_sources] = traffic_sources.to_s
     return old_env
   end
   
@@ -100,7 +99,7 @@ class TrafficSource
   
   def same_as?(traffic_source)
     COOKIE_LINE_PARAMETERS.last(5).each do |attribute|
-      return false if self.send(attribute) != traffic_source.send(attribute)
+      return false if self.send(attribute).to_s != traffic_source.send(attribute).to_s
     end
     return true
   end

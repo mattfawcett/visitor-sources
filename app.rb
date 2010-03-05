@@ -5,7 +5,7 @@ require File.expand_path(File.dirname(__FILE__) + '/traffic_source')
 require File.expand_path(File.dirname(__FILE__) + '/traffic_sources')
 require File.expand_path(File.dirname(__FILE__) + '/traffic_source_middleware')
 
-use TrafficSourceMiddleware
+use TrafficSourceMiddleware, :custom_parameter_mapping => {:campaign => :campaign}
 
 
 
