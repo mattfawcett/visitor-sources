@@ -15,6 +15,7 @@
 require "uri"
 class TrafficSource
   attr_accessor :encoder_version, :unix_timestamp, :medium, :term, :source, :campaign, :content, :custom_parameter_mapping, :env
+  
   COOKIE_LINE_PARAMETERS = ['encoder_version', 'unix_timestamp', 'medium', 'term', 'source', 'campaign', 'content']
   STANDARD_PARAMETER_MAPPING = {:medium => :utm_medium, :term => :utm_term, :source => :utm_source, :campaign => :utm_campaign, :content => :utm_content}
   
@@ -32,6 +33,7 @@ class TrafficSource
     COOKIE_LINE_PARAMETERS.last(5).each do |attribute| 
       traffic_source.send("#{attribute}=", traffic_source.query_string_value_for(attribute.to_sym))
     end
+    
     #special case for adwords auto tagging
     traffic_source.medium = 'cpc' if traffic_source.medium.nil? && !traffic_source.env["rack.request.query_hash"][:gclid].nil?
     
@@ -71,5 +73,8 @@ class TrafficSource
     if STANDARD_PARAMETER_MAPPING[attribute] && env["rack.request.query_hash"][STANDARD_PARAMETER_MAPPING[attribute]]
       return env["rack.request.query_hash"][STANDARD_PARAMETER_MAPPING[attribute]]
     end 
+  end
+  
+  def same_as?(traffic_source)
   end
 end

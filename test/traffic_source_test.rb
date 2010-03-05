@@ -8,7 +8,7 @@ require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 class TrafficSourceTest < Test::Unit::TestCase
   context "TrafficSourceTest" do
     setup do
-      @rack_env = EXAMPLE_RACK_ENV
+      @rack_env = EXAMPLE_RACK_ENV.dup
       @custom_variable_matches = {:campaign => :custom_campaign, :term => :custom_keywords, :medium => :custom_medium}        
     end
     context "initialize_with_rack_env" do     
@@ -135,4 +135,15 @@ class TrafficSourceTest < Test::Unit::TestCase
       
     end
   end
+  
+  context "same_as?" do
+    should "be true if all the main fields are the same" do
+
+    end
+    
+    should "be false if one of the fields are different" do
+      
+    end
+  end
+  
 end                    
