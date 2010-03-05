@@ -89,6 +89,7 @@ class TrafficSource
   end
 
   def query_string_value_for(attribute)
+    self.env["rack.request.query_hash"] ||= {}
     if custom_parameter_mapping[attribute] && env["rack.request.query_hash"][custom_parameter_mapping[attribute]]
       return env["rack.request.query_hash"][custom_parameter_mapping[attribute]]
     end
