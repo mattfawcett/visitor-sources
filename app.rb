@@ -10,7 +10,6 @@ use TrafficSourceMiddleware, :custom_parameter_mapping => {:campaign => :campaig
 
 
 get "/" do 
-  request.env[:traffic_sources].to_s + '<a href="/"></a>'
-#  request.env.inspect
+  request.env[:traffic_sources].to_s
 end
 

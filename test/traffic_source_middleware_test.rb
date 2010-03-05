@@ -8,18 +8,14 @@ class TrafficSourceMiddlewareTest < Test::Unit::TestCase
     Sinatra::Application    
   end
 
-  def test_redirect_logged_in_users_to_dashboard    
+  def test_should_display_traffic_source_line   
+    start_time = Time.now.to_i
     get "/", params = {}, rack_env = {}
     assert last_response.ok?
-    cookie_value = last_response.headers["Set-Cookie"][/rack.session=(.*);/, 1]
-    puts "COOKIE VAL IS #{cookie_value}"
-    decoded_cookie_value = Base64.decode64(cookie_value)
-    puts "decoded val is #{decoded_cookie_value}"
-    assert_equal "1|#{Time.now.to_i}|direct", decoded_cookie_value
-    #puts "APP IS "+app.sessions.inspect
-    #assert_equal last_response.headers["Set-Cookie"], ""
-    #Base64.decode64(enc)
-    
+    assert_equal "1|#{start_time}|direct", last_response.body
+    sleep 1
+    get "/", params = {:campaign => "mycampaign", :utm_medium => "cpc"}, rack_env = {}
+    assert_equal "1|#{start_time}|direct,1|#{start_time+1}|cpc|||mycampaign", last_response.body
   end
 
 end
