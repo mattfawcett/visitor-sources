@@ -137,12 +137,22 @@ class TrafficSourceTest < Test::Unit::TestCase
   end
   
   context "same_as?" do
+    setup do
+      @source_1 = TrafficSource.new(:encoder_version => 1, :unix_timestamp => Time.now.to_i, :medium => 'cpc', 
+                                    :term => 'myterm', :source => 'google', :campaign => 'mycamp')
+      @source_2 = @source_1.dup
+    end
+    
     should "be true if all the main fields are the same" do
-      
+      assert @source_1.same_as?(@source_2)
+      @source_2.encoder_version = 2
+      @source_2.unix_timestamp = 1234
+      assert @source_1.same_as?(@source_2)
     end
     
     should "be false if one of the fields are different" do
-      
+      @source_2.medium = "direct"
+      assert !@source_1.same_as?(@source_2)
     end
   end
   

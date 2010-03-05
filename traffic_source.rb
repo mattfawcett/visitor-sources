@@ -79,5 +79,9 @@ class TrafficSource
   end
   
   def same_as?(traffic_source)
+    COOKIE_LINE_PARAMETERS.last(5).each do |attribute|
+      return false if self.send(attribute) != traffic_source.send(attribute)
+    end
+    return true
   end
 end
