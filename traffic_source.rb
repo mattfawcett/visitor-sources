@@ -34,20 +34,21 @@ class TrafficSource
     end
     #special case for adwords auto tagging
     traffic_source.medium = 'cpc' if traffic_source.medium.nil? && !traffic_source.env["rack.request.query_hash"][:gclid].nil?
-    if traffic_source.medium.nil?
-      if !env["HTTP_REFERER"].nil? && env["HTTP_REFERER"] =~ /#{env["HTTP_HOST"]}/
-        return traffic_source
-      end
-    
+    if traffic_source.medium.nil?          
       if env["HTTP_REFERER"].nil?
         traffic_source.medium = "direct"      
-      else
-        uri = URI.parse(env["HTTP_REFERER"])
-        traffic_source.medium = "referal"      
-        traffic_source.source = uri.host
-        traffic_source.content = uri.path
+      else        
+        traffic_source.medium = "referal"           
       end
     end
+    if traffic_source.source.nil?     
+      begin 
+        uri = URI.parse(env["HTTP_REFERER"])   
+        traffic_source.source = uri.host
+        traffic_source.content = uri.path if traffic_source.content.nil?
+      rescue; end
+    end
+    return nil if traffic_source.medium.nil?
     return traffic_source
   end
   

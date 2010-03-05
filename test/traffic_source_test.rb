@@ -16,6 +16,7 @@ class TrafficSourceTest < Test::Unit::TestCase
       context "when there are custom variables in the url present" do
         should "use the custom variables to set the correct TrafficSource" do
           @rack_env["rack.request.query_hash"] = {:custom_campaign => "MyCamp1", :custom_keywords => "Product One", :gclid => "AutoAdwordsTaggingClid"}
+          @rack_env["HTTP_REFERER"] = "http://www.google.co.uk/search"
           traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
           assert_equal "cpc", traffic_source.medium
           assert_equal "MyCamp1", traffic_source.campaign
@@ -24,8 +25,9 @@ class TrafficSourceTest < Test::Unit::TestCase
           assert_equal "1|#{Time.now.to_i}|cpc|Product One|google|MyCamp1", traffic_source.to_s
         end
       
-        should "use presume direct if no gclid" do
+        should "use presume direct if no gclid" do          
           @rack_env["rack.request.query_hash"] = {:custom_campaign => "MyCamp1", :custom_keywords => "Product One"}
+          @rack_env["HTTP_REFERER"] = "http://www.google.co.uk/search"
           traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
           assert_equal "direct", traffic_source.medium
           assert_equal "MyCamp1", traffic_source.campaign
@@ -36,6 +38,7 @@ class TrafficSourceTest < Test::Unit::TestCase
       
         should "assign to cpc if a custom variable says thats the case" do
           @rack_env["rack.request.query_hash"] = {:custom_campaign => "MyCamp1", :custom_keywords => "Product One", :custom_medium => "cpc"}
+          @rack_env["HTTP_REFERER"] = "http://www.google.co.uk/search"
           traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
           assert_equal "cpc", traffic_source.medium
           assert_equal "MyCamp1", traffic_source.campaign
