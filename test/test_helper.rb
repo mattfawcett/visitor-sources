@@ -3,7 +3,7 @@ require 'test/unit'
 require 'rack/test'
 require 'shoulda'
 require 'base64'
-require File.expand_path(File.dirname(__FILE__) + '/../app')
+require File.expand_path(File.dirname(__FILE__) + '/app')
 
 EXAMPLE_RACK_ENV = {
 "rack.session"=>{:traffic_sources=>""}, 
