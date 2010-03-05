@@ -70,29 +70,40 @@ class TrafficSourceTest < Test::Unit::TestCase
           end
       
           context "when the referer is external" do
-            context "and its not adwords" do
-              should "have a medium of referer with source and content" do
-                @rack_env["HTTP_REFERER"] = "http://matthewfawcett.co.uk/some/path"
-                traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
-                assert_equal "referal", traffic_source.medium
-                assert_equal "matthewfawcett.co.uk", traffic_source.source
-                assert_equal "/some/path", traffic_source.content
-                assert_equal "1|#{Time.now.to_i}|referal||matthewfawcett.co.uk||/some/path", traffic_source.to_s
-              end
-              
-              should "assign to a search engine with correct keywords if referer matches" do
-                @rack_env["HTTP_REFERER"] = "http://google.co.uk/search?q=mysearchterms"
-                traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
-                assert_equal "organic", traffic_source.medium
-                assert_equal "google", traffic_source.source
-                assert_equal "mysearchterms", traffic_source.term
-                assert_nil   traffic_source.content
-                assert_equal "1|#{Time.now.to_i}|organic|mysearchterms|google", traffic_source.to_s
-              end
+            should "have a medium of referer with source and content" do
+              @rack_env["HTTP_REFERER"] = "http://matthewfawcett.co.uk/some/path"
+              traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
+              assert_equal "referal", traffic_source.medium
+              assert_equal "matthewfawcett.co.uk", traffic_source.source
+              assert_equal "/some/path", traffic_source.content
+              assert_equal "1|#{Time.now.to_i}|referal||matthewfawcett.co.uk||/some/path", traffic_source.to_s
+            end
+            
+            should "assign to a search engine with correct keywords if referer matches" do
+              @rack_env["HTTP_REFERER"] = "http://google.co.uk/search?q=mysearchterms"
+              traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
+              assert_equal "organic", traffic_source.medium
+              assert_equal "google", traffic_source.source
+              assert_equal "mysearchterms", traffic_source.term
+              assert_nil   traffic_source.content
+              assert_equal "1|#{Time.now.to_i}|organic|mysearchterms|google", traffic_source.to_s
             end
           end
         end
       end    
+      
+      context "using standard google variables" do
+        should "should assign to ppc if the variables say so" do
+          @rack_env["rack.request.query_hash"] = {:utm_campaign => "MyCamp1", :utm_term => "Product One", :utm_medium => "cpc", :utm_source => "google", :utm_term => "Product One"}
+          @rack_env["HTTP_REFERER"] = "http://www.google.co.uk/search"
+          traffic_source = TrafficSource.initialize_with_rack_env(@rack_env, @custom_variable_matches)
+          assert_equal "cpc", traffic_source.medium
+          assert_equal "MyCamp1", traffic_source.campaign
+          assert_equal "Product One", traffic_source.term
+          assert_equal Time.now.to_i, traffic_source.unix_timestamp
+          assert_equal "1|#{Time.now.to_i}|cpc|Product One|google|MyCamp1", traffic_source.to_s
+        end
+      end
     end
   
     context "query_string_value_for" do
