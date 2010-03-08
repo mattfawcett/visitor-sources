@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{visitor_sources}
-  s.version = "0.0.0"
+  s.version = "0.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Matt Fawcett"]
-  s.date = %q{2010-03-05}
+  s.date = %q{2010-03-08}
   s.description = %q{Use a cookie to record the sources that each visitor came to your site}
   s.email = %q{mail@matthewfawcett.co.uk}
   s.extra_rdoc_files = [
@@ -17,18 +17,21 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     "README.md",
+     "RakeFile",
      "VERSION",
      "lib/visitor_sources.rb",
      "lib/visitor_sources/search_engine.rb",
      "lib/visitor_sources/traffic_source.rb",
      "lib/visitor_sources/traffic_source_middleware.rb",
      "lib/visitor_sources/traffic_sources.rb",
+     "pkg/visitor_sources-0.0.0.gem",
      "test/app.rb",
      "test/search_engine_test.rb",
      "test/test_helper.rb",
      "test/traffic_source_middleware_test.rb",
      "test/traffic_source_test.rb",
-     "test/traffic_sources_test.rb"
+     "test/traffic_sources_test.rb",
+     "visitor_sources.gemspec"
   ]
   s.homepage = %q{http://github.com/mattfawcett/visitor_sources}
   s.rdoc_options = ["--charset=UTF-8"]
