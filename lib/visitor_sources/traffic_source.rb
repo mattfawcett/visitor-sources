@@ -14,7 +14,8 @@
 
 require "uri"
 class TrafficSource
-  attr_accessor :encoder_version, :unix_timestamp, :medium, :term, :source, :campaign, :content, :custom_parameter_mapping, :env
+  attr_accessor :encoder_version, :unix_timestamp, :medium, :term, :source, :campaign, :content, 
+                :custom_parameter_mapping, :env
   
   COOKIE_LINE_PARAMETERS = ['encoder_version', 'unix_timestamp', 'medium', 'term', 'source', 'campaign', 'content']
   STANDARD_PARAMETER_MAPPING = {:medium => :utm_medium, :term => :utm_term, :source => :utm_source, :campaign => :utm_campaign, :content => :utm_content}
@@ -25,13 +26,13 @@ class TrafficSource
     end
   end
   
-  def self.updated_rack_environment(old_env, custom_parameter_mapping = {})
+  def self.updated_rack_environment(old_env, custom_parameter_mapping = {}, ignore_duplicate_source_within=120)
     old_env["rack.session"][:traffic_sources] ||= ''
     traffic_sources = TrafficSources.new(old_env["rack.session"][:traffic_sources])
     latest_source = TrafficSource.initialize_with_rack_env(old_env, custom_parameter_mapping)
     return old_env if latest_source.to_s.nil?
     if traffic_sources.length > 0
-      return old_env if latest_source.same_as?(traffic_sources.last)
+      return old_env if latest_source.same_as?(traffic_sources.last) && latest_source.unix_timestamp-traffic_sources.last.unix_timestamp <  ignore_duplicate_source_within
     end
     traffic_sources << latest_source
     old_env["rack.session"][:traffic_sources] = traffic_sources.to_s
@@ -40,7 +41,7 @@ class TrafficSource
   
   def TrafficSource.initialize_with_rack_env(env, custom_parameter_mapping = {})
     traffic_source = self.new(:env => env, :custom_parameter_mapping => custom_parameter_mapping, 
-                              :unix_timestamp => Time.now.to_i, :encoder_version => 1)
+                              :unix_timestamp => Time.now.to_i, :encoder_version => 1)    
     
     COOKIE_LINE_PARAMETERS.last(5).each do |attribute| 
       traffic_source.send("#{attribute}=", traffic_source.query_string_value_for(attribute.to_sym))

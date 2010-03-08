@@ -11,8 +11,8 @@ class TrafficSourceTest < Test::Unit::TestCase
       @rack_env = EXAMPLE_RACK_ENV.dup
       @custom_variable_matches = {:campaign => :custom_campaign, :term => :custom_keywords, :medium => :custom_medium}        
     end
-    context "initialize_with_rack_env" do     
-         
+    
+    context "initialize_with_rack_env" do              
       context "when there are custom variables in the url present" do
         should "use the custom variables to set the correct TrafficSource" do
           @rack_env["rack.request.query_hash"] = {"custom_campaign" => "MyCamp1", "custom_keywords" => "Product One", "gclid" => "AutoAdwordsTaggingClid"}
@@ -136,6 +136,9 @@ class TrafficSourceTest < Test::Unit::TestCase
     end
     
     context "updated_rack_environment" do
+      setup do
+        @rack_env["rack.session"][:traffic_sources] = ''
+      end
 
       should "not update the enviroment if the current TrafficSource#to_s is nil" do
         @rack_env["HTTP_REFERER"] = "http://localhost:9393/some/path"
@@ -143,13 +146,27 @@ class TrafficSourceTest < Test::Unit::TestCase
         assert_equal "", rack_env["rack.session"][:traffic_sources]
       end
 
-      should "not update the enviroment if the last TrafficSource#to_s is the same as the current traffic source" do
+      should "not update the enviroment if the last TrafficSource#to_s is the same as the current traffic source and the last one was recent" do
         @rack_env["HTTP_REFERER"] = nil
+        timestamp_of_first_request = Time.now.to_i - 60
+        Delorean.time_travel_to("1 minute ago") do         
+          rack_env = TrafficSource.updated_rack_environment(@rack_env)
+          assert_equal "1|#{timestamp_of_first_request}|direct", rack_env["rack.session"][:traffic_sources]
+        end
         rack_env = TrafficSource.updated_rack_environment(@rack_env)
-        assert_equal "1|#{Time.now.to_i}|direct", rack_env["rack.session"][:traffic_sources]
-
+        assert_equal "1|#{timestamp_of_first_request}|direct", rack_env["rack.session"][:traffic_sources]
+      end
+      
+      should "update the enviroment if the last TrafficSource#to_s is the same as the current traffic source but the last source was a while ago" do
+        @rack_env = EXAMPLE_RACK_ENV.dup
+        @rack_env["HTTP_REFERER"] = nil
+        timestamp_of_first_request = Time.now.to_i - 180
+        Delorean.time_travel_to("3 minute ago") do                
+          rack_env = TrafficSource.updated_rack_environment(@rack_env)
+          assert_equal "1|#{timestamp_of_first_request}|direct", rack_env["rack.session"][:traffic_sources]
+        end
         rack_env = TrafficSource.updated_rack_environment(@rack_env)
-        assert_equal "1|#{Time.now.to_i}|direct", rack_env["rack.session"][:traffic_sources]
+        assert_equal "1|#{timestamp_of_first_request}|direct,1|#{Time.now.to_i}|direct", rack_env["rack.session"][:traffic_sources]
       end
 
       should "update the traffic source if the current one is differenty from the last one" do
@@ -164,51 +181,48 @@ class TrafficSourceTest < Test::Unit::TestCase
       end
     end
     
-  end
   
   
   
-  context "same_as?" do
-    setup do
-      @source_1 = TrafficSource.new(:encoder_version => 1, :unix_timestamp => Time.now.to_i, :medium => 'cpc', 
-                                    :term => 'myterm', :source => 'google', :campaign => 'mycamp')
-      @source_2 = @source_1.dup
-    end
+    context "same_as?" do
+      setup do
+        @source_1 = TrafficSource.new(:encoder_version => 1, :unix_timestamp => Time.now.to_i, :medium => 'cpc', 
+                                      :term => 'myterm', :source => 'google', :campaign => 'mycamp')
+        @source_2 = @source_1.dup
+      end
     
-    should "be true if all the main fields are the same" do
-      assert @source_1.same_as?(@source_2)
-      @source_2.encoder_version = 2
-      @source_2.unix_timestamp = 1234
-      assert @source_1.same_as?(@source_2)
-    end
+      should "be true if all the main fields are the same" do
+        assert @source_1.same_as?(@source_2)
+        @source_2.encoder_version = 2
+        @source_2.unix_timestamp = 1234
+        assert @source_1.same_as?(@source_2)
+      end
     
-    should "be false if one of the fields are different" do
-      @source_2.medium = "direct"
-      assert !@source_1.same_as?(@source_2)
+      should "be false if one of the fields are different" do
+        @source_2.medium = "direct"
+        assert !@source_1.same_as?(@source_2)
+      end
     end
-  end
   
-  context "initialize_from_string" do
-    should "create a new TrafficSource using the correct parameters from the string" do
-      string = "1|123456|organic|mysearchterms|google"
-      source = TrafficSource.initialize_from_string(string)
-      assert_equal 1,               source.encoder_version
-      assert_equal 123456,          source.unix_timestamp
-      assert_equal "organic",       source.medium
-      assert_equal "mysearchterms", source.term
-      assert_equal "google",        source.source
-      assert_nil    source.campaign
-      assert_nil    source.content
+    context "initialize_from_string" do
+      should "create a new TrafficSource using the correct parameters from the string" do
+        string = "1|123456|organic|mysearchterms|google"
+        source = TrafficSource.initialize_from_string(string)
+        assert_equal 1,               source.encoder_version
+        assert_equal 123456,          source.unix_timestamp
+        assert_equal "organic",       source.medium
+        assert_equal "mysearchterms", source.term
+        assert_equal "google",        source.source
+        assert_nil    source.campaign
+        assert_nil    source.content
+      end
     end
-  end
   
-  context "date" do
-    should "return a date object using the timestamp" do
-      @source = TrafficSource.new(:unix_timestamp => 1267804832)
-      assert_equal Time.at(1267804832), @source.date
+    context "date" do
+      should "return a date object using the timestamp" do
+        @source = TrafficSource.new(:unix_timestamp => 1267804832)
+        assert_equal Time.at(1267804832), @source.date
+      end
     end
-  end
-  
-  
-  
+  end    
 end                    
